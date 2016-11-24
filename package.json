@@ -1,0 +1,32 @@
+{
+    "author": "mysystemlater@gmail.com",
+    "dependencies": {},
+    "keywords": [],
+    "name": "newmytime",
+    "pebble": {
+        "displayName": "NewMyTime",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "BEGIN",
+            "END",
+            "ACTIVITY"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery"
+        ],
+        "uuid": "09b21020-8cdc-4a66-ade8-fd593a56bf66",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}

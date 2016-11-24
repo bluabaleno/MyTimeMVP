@@ -11,7 +11,7 @@
 #define  TIMER_SLEEP_KEY 1 
 #define  TIMER_SLEEP_DEFAULT 0
   
-static Window *sleep_main_window;
+static Window *s_main_window;
 static TextLayer *s_label_layer;
 static BitmapLayer *s_icon_layer;
 static ActionBarLayer *s_action_bar_layer;
@@ -167,7 +167,7 @@ static void window_load(Window *window) {
   app_message_open(inbox_size, outbox_size);
 }
 
-static void window_unload(Window *sleep_main_window) {
+static void window_unload(Window *window) {
   persist_write_bool(PAUSE_KEY, pause);
   persist_write_int(TIMER_KEY, time_stopwatch_sleep);
   
@@ -183,15 +183,15 @@ static void window_unload(Window *sleep_main_window) {
   gbitmap_destroy(s_pause_bitmap);
   gbitmap_destroy(s_cross_bitmap);
 
-  window_destroy(sleep_main_window);
-  sleep_main_window = NULL;
+  window_destroy(window);
+  s_main_window = NULL;
 }
 
 void sleep_window_push() {
-  if(!sleep_main_window) {
-    sleep_main_window = window_create();
-    window_set_background_color(sleep_main_window, PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorWhite));
-    window_set_window_handlers(sleep_main_window, (WindowHandlers) {
+  if(!s_main_window) {
+    s_main_window = window_create();
+    window_set_background_color(s_main_window, PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorWhite));
+    window_set_window_handlers(s_main_window, (WindowHandlers) {
         .load = window_load,
         .unload = window_unload,
     });
@@ -200,5 +200,5 @@ void sleep_window_push() {
 
     
   }
-  window_stack_push(sleep_main_window, true);
+  window_stack_push(s_main_window, true);
 }

@@ -10,6 +10,8 @@ static uint16_t get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_in
   return LIST_MESSAGE_WINDOW_NUM_ROWS;
 }
 
+
+
 static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *context) {
   switch(cell_index->row) {
     case 0:
@@ -19,13 +21,13 @@ static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex 
       menu_cell_basic_draw(ctx, cell_layer, "Writing", NULL, NULL);
       break;
     case 2:
-      menu_cell_basic_draw(ctx, cell_layer, "Transport", NULL, NULL);
+//       menu_cell_basic_draw(ctx, cell_layer, "Transport", NULL, NULL);
       break;
     case 3:
-      menu_cell_basic_draw(ctx, cell_layer, "Eat", NULL, NULL);
+//       menu_cell_basic_draw(ctx, cell_layer, "Eat", NULL, NULL);
       break;
     case 4:
-      menu_cell_basic_draw(ctx, cell_layer, "Programming", NULL, NULL);
+//       menu_cell_basic_draw(ctx, cell_layer, "Programming", NULL, NULL);
       break;
 
     default:

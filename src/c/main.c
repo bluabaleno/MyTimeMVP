@@ -2,7 +2,6 @@
 
 #include "activities.h"
 
-
 #define NUM_WINDOWS 4
 
 static Window *s_main_window;
@@ -21,10 +20,10 @@ static void draw_row_callback(GContext *ctx, const Layer *cell_layer, MenuIndex 
       menu_cell_basic_draw(ctx, cell_layer, "Timeline", NULL, NULL);
       break;
     case 2:
-      menu_cell_basic_draw(ctx, cell_layer, "Goals", NULL, NULL);
+//       menu_cell_basic_draw(ctx, cell_layer, "Goals", NULL, NULL);
       break;
     case 3:
-      menu_cell_basic_draw(ctx, cell_layer, "Setting", NULL, NULL);
+//       menu_cell_basic_draw(ctx, cell_layer, "Setting", NULL, NULL);
       break;
     default:
       break;

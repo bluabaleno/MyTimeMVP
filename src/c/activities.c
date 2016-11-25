@@ -2,7 +2,7 @@
 #include "activities.h"
 
 
-static Window *s_main_window;
+Window *s_main_window;
 static MenuLayer *s_menu_layer;
 static TextLayer *s_list_message_layer;
 

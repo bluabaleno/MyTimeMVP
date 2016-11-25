@@ -13,12 +13,12 @@
 #define  TIMER_WRITE_DEFAULT 0
 
   
-static Window *s_main_window;
+static Window *write_main_window;
 static TextLayer *s_label_layer;
 static BitmapLayer *s_icon_layer;
 static ActionBarLayer *s_action_bar_layer;
- //static Timer* s_timer;
 
+// extern Window *s_main_window;
 
 static GBitmap *s_icon_bitmap, *s_pause_bitmap, *s_cross_bitmap, *s_play_bitmap;
 
@@ -189,14 +189,16 @@ static void window_unload(Window *window) {
   gbitmap_destroy(s_cross_bitmap);
 
   window_destroy(window);
-  s_main_window = NULL;
+  write_main_window = NULL;
+  
+//   window_stack_push(s_main_window, true);
 }
 
 void write_window_push() {
-  if(!s_main_window) {
-    s_main_window = window_create();
-    window_set_background_color(s_main_window, PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorWhite));
-    window_set_window_handlers(s_main_window, (WindowHandlers) {
+  if(!write_main_window) {
+    write_main_window = window_create();
+    window_set_background_color(write_main_window, PBL_IF_COLOR_ELSE(GColorJaegerGreen, GColorWhite));
+    window_set_window_handlers(write_main_window, (WindowHandlers) {
         .load = window_load,
         .unload = window_unload,
     });
@@ -205,5 +207,5 @@ void write_window_push() {
 
     
   }
-  window_stack_push(s_main_window, true);
+  window_stack_push(write_main_window, true);
 }

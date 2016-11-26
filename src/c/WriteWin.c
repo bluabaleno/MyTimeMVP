@@ -2,31 +2,23 @@
 #include <pebble.h>
 
 
-#define  TIMER_KEY 2
+#define  TIME_STORE_KEY 2
 #define  TIMER_DEFAULT 0
-
-#define  PAUSE_KEY 2
-#define  PAUSE_DEFAULT false
-
-
-#define  TIMER_WRITE_KEY 2
-#define  TIMER_WRITE_DEFAULT 0
-
   
 static Window *write_main_window;
 static TextLayer *s_label_layer;
 static BitmapLayer *s_icon_layer;
 static ActionBarLayer *s_action_bar_layer;
 
-// extern Window *s_main_window;
+extern Window *s_main_window;
 
 static GBitmap *s_icon_bitmap, *s_pause_bitmap, *s_cross_bitmap, *s_play_bitmap;
 
 char tmp_write[16];
 uint32_t time_stopwatch_write = TIMER_DEFAULT;
-bool pause_write = PAUSE_DEFAULT;
+bool pause_write = false;
 
-uint32_t time_begin_write, time_end_write, time_elapse_write;
+uint32_t time_begin_write, time_end_write;
 
 static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len) {
   int hours = timer_time / 3600;
@@ -41,9 +33,7 @@ static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int s
 }
 
 
-static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
-//   APP_LOG(APP_LOG_LEVEL_DEBUG, "%d", (int)time_end_write);
-   // begin_sleep dictionary  
+static void select_click_handler(ClickRecognizerRef recognizer, void *context) { 
   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "I've clicked");
   
@@ -51,24 +41,22 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   pause_write = !pause_write;
-  
-  //when it is paused, it logs the begin_sleepning time and the end_sleep time for this session and send_sleep the data to firebase
+
+  //when it is paused, it logs the begin_writening time and the end_write time for this session and send_write the data to firebase
   if(pause_write){
     action_bar_layer_set_icon(s_action_bar_layer, BUTTON_ID_UP, s_play_bitmap);
     time_end_write = (uint32_t)time(NULL);
-    time_elapse_write = time_end_write - time_begin_write;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "time_begin_write: %d time_end_write %d", (int)time_begin_write, (int)time_end_write);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "duration: %d ", (int)time_elapse_write);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "messagekey begin_sleep: %d ", (int)MESSAGE_KEY_BEGIN);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "messagekey end_sleep: %d ", (int)MESSAGE_KEY_END);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "messagekey begin_write: %d ", (int)MESSAGE_KEY_BEGIN);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "messagekey end_write: %d ", (int)MESSAGE_KEY_END);
     
-    //begin_sleepning to encode and send_sleep time data
+    //begin_writening to encode and send_write time data
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
     dict_write_int32(iter, MESSAGE_KEY_BEGIN, (int)time_begin_write);
     dict_write_int32(iter, MESSAGE_KEY_END, (int)time_end_write);
-    dict_write_cstring(iter, MESSAGE_KEY_ACTIVITY, "writing");
+    dict_write_cstring(iter, MESSAGE_KEY_ACTIVITY, "sleeping");
     
     app_message_outbox_send();
 
@@ -80,10 +68,21 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  pause_write= true;
+  pause_write = true;
   time_end_write = (uint32_t)time(NULL);
   
   time_stopwatch_write = TIMER_DEFAULT;
+  
+  //if pause, then that means it aleady sent the data, no need to send again.
+  
+  DictionaryIterator *iter;
+  app_message_outbox_begin(&iter);
+        
+  dict_write_int32(iter, MESSAGE_KEY_BEGIN, (int)time_begin_write);
+  dict_write_int32(iter, MESSAGE_KEY_END, (int)time_end_write);
+  dict_write_cstring(iter, MESSAGE_KEY_ACTIVITY, "writing");
+    
+  app_message_outbox_send();
   
 }
 
@@ -94,7 +93,7 @@ static void click_config_provider(void *context) {
 }
 
 static void update_time() {
-  if(!pause_write){
+  if(!pause_write ){
     time_stopwatch_write++;
   }
   
@@ -108,34 +107,15 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 }
 
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send_sleep success!");
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send_write success!");
 }
 
 static void window_load(Window *window) {
   
-  time_begin_write = (uint32_t)time(NULL);
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "The current time is %d", (int)time_begin_write);
-  pause_write= persist_exists(PAUSE_KEY) ? persist_read_bool(PAUSE_KEY)  :  PAUSE_DEFAULT;
-  time_end_write = persist_exists(TIMER_WRITE_KEY) ? persist_read_int(TIMER_WRITE_KEY)  : TIMER_WRITE_DEFAULT;
-  uint32_t time_elapse_write; 
-  if (!pause_write){
-    time_elapse_write = time_begin_write - time_end_write;
-  } else {
-    time_elapse_write = 0;
-  }
-  
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "The time_elapse_write  is %d", (int)time_elapse_write);
-  
-  if (persist_exists(TIMER_KEY)){
-    time_stopwatch_write = time_elapse_write + persist_read_int(TIMER_KEY);
-  } else{
-    time_stopwatch_write = TIMER_DEFAULT;
-  }
-  
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-//   s_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SLEEP);
+  s_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_WRITE);
 
   const GEdgeInsets icon_insets = {.top = 7, .right = 28, .bottom = 56, .left = 14};
   s_icon_layer = bitmap_layer_create(grect_inset(bounds, icon_insets));
@@ -153,9 +133,9 @@ static void window_load(Window *window) {
   text_layer_set_font(s_label_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(s_label_layer));
 
-//   s_pause_bitmap = gbitmap_create_with_resource(RESOURCE_ID_PAUSE);
-//   s_cross_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CROSS);
-//   s_play_bitmap = gbitmap_create_with_resource(RESOURCE_ID_PLAY);
+  s_pause_bitmap = gbitmap_create_with_resource(RESOURCE_ID_PAUSE);
+  s_cross_bitmap = gbitmap_create_with_resource(RESOURCE_ID_CROSS);
+  s_play_bitmap = gbitmap_create_with_resource(RESOURCE_ID_PLAY);
   
   s_action_bar_layer = action_bar_layer_create();
   action_bar_layer_set_click_config_provider(s_action_bar_layer, click_config_provider);
@@ -173,25 +153,7 @@ static void window_load(Window *window) {
 }
 
 static void window_unload(Window *window) {
-  persist_write_bool(PAUSE_KEY, pause_write);
-  persist_write_int(TIMER_KEY, time_stopwatch_write);
-  
-  if (!pause_write){
-    persist_write_int(TIMER_WRITE_KEY, time_end_write = time_begin_write);
-  }
-  
-  text_layer_destroy(s_label_layer);
-  action_bar_layer_destroy(s_action_bar_layer);
-  bitmap_layer_destroy(s_icon_layer);
 
-  gbitmap_destroy(s_icon_bitmap);
-  gbitmap_destroy(s_pause_bitmap);
-  gbitmap_destroy(s_cross_bitmap);
-
-  window_destroy(window);
-  write_main_window = NULL;
-  
-//   window_stack_push(s_main_window, true);
 }
 
 void write_window_push() {

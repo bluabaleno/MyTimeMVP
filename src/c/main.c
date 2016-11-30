@@ -4,6 +4,8 @@
 
 #define NUM_WINDOWS 4
 
+int masterLog = 321;
+
 static Window *s_main_window;
 static MenuLayer *s_menu_layer;
 
@@ -52,6 +54,22 @@ static void select_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index,
 }
 
 static void window_load(Window *window) {
+  
+  if(persist_exists(masterLog)){
+    
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "key perserved, retriving log.");
+  int logsize = persist_get_size(masterLog);
+  int displaylog_key[logsize];
+  displaylog_key[logsize] = persist_read_data(masterLog, (void *)displaylog_key, sizeof(displaylog_key) );
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "logkeys are %d, %d, %d", displaylog_key[0], displaylog_key[1], displaylog_key[2]);
+
+  }else {
+      // if no masterlog exists then it means it is the user's first time using the app.
+      // masterlog will be initalized as a global variable, but nothing will be written to it yet.
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "key not perserved, creating new masterlog. Account is %d", masterLog);
+  
+  }
+  
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 

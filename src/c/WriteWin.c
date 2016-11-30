@@ -1,7 +1,6 @@
 
 #include <pebble.h>
 
-
 #define  TIME_STORE_KEY 2
 #define  TIMER_DEFAULT 0
   
@@ -18,6 +17,7 @@ char tmp_write[16];
 uint32_t time_stopwatch_write = TIMER_DEFAULT;
 bool pause_write = false;
 
+extern int masterLog;
 uint32_t time_begin_write, time_end_write;
 
 static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int str_len) {
@@ -34,16 +34,27 @@ static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int s
 
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) { 
-  
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "I've clicked");
-  
 
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "the key/account is %d" , masterLog);
+  int logkey1[3] = {1,2,3};
+//   logkey1[0] = 1;
+   
+  persist_write_data(masterLog, (const void *)logkey1, sizeof(logkey1));
+  
+  int logsize = persist_get_size(masterLog);
+  int displaylog[logsize];
+  displaylog[logsize] = persist_read_data(masterLog, (void *)displaylog, sizeof(displaylog) );
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "logdata is %d", displaylog[logsize]);
 }
+
+
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  
   pause_write = !pause_write;
 
   //when it is paused, it logs the begin_writening time and the end_write time for this session and send_write the data to firebase
-  if(pause_write){
+  if(pause_write){ //pause_write = true, meaning the time has been just paused.
     action_bar_layer_set_icon(s_action_bar_layer, BUTTON_ID_UP, s_play_bitmap);
     time_end_write = (uint32_t)time(NULL);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "time_begin_write: %d time_end_write %d", (int)time_begin_write, (int)time_end_write);
@@ -59,8 +70,14 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     dict_write_cstring(iter, MESSAGE_KEY_ACTIVITY, "sleeping");
     
     app_message_outbox_send();
-
-  }else {
+    
+    //getting the last-used logkey value from masterlog
+  int logsize = persist_get_size(masterLog);
+  int displaylog[logsize];
+  displaylog[logsize] = persist_read_data(masterLog, (void *)displaylog, sizeof(displaylog) );
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "last logkey is %d", displaylog[logsize - 1]);
+    
+  }else { //pause_write = false, meaning the time has just been resumed.
     action_bar_layer_set_icon(s_action_bar_layer, BUTTON_ID_UP, s_pause_bitmap);
     time_begin_write = (uint32_t)time(NULL);
   }
@@ -68,6 +85,8 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
+  
+  // have to account for the times when user pauses and then hits stop.
   pause_write = true;
   time_end_write = (uint32_t)time(NULL);
   
@@ -97,7 +116,7 @@ static void update_time() {
     time_stopwatch_write++;
   }
   
-  timer_time_str(time_stopwatch_write, false, tmp_write, sizeof(tmp_write));
+  timer_time_str(time_stopwatch_write, true, tmp_write, sizeof(tmp_write));
   
   text_layer_set_text(s_label_layer, tmp_write );
 }
@@ -111,6 +130,9 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 }
 
 static void window_load(Window *window) {
+  
+  
+  time_begin_write = (uint32_t)time(NULL);
   
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);

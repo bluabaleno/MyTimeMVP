@@ -1,7 +1,6 @@
 
 #include <pebble.h>
 
-
 #define  TIME_STORE_KEY 1
 #define  TIMER_DEFAULT 0
   
@@ -95,7 +94,7 @@ static void update_time() {
     time_stopwatch_sleep++;
   }
   
-  timer_time_str(time_stopwatch_sleep, false, tmp_sleep, sizeof(tmp_sleep));
+  timer_time_str(time_stopwatch_sleep, true, tmp_sleep, sizeof(tmp_sleep));
   
   text_layer_set_text(s_label_layer, tmp_sleep );
 }

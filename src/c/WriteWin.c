@@ -1,7 +1,7 @@
 
 #include <pebble.h>
 
-#define  TIME_STORE_KEY 2
+#define  ACTIVITY_KEY 2
 #define  TIMER_DEFAULT 0
   
 static Window *write_main_window;
@@ -36,16 +36,25 @@ static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int s
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) { 
 
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "the key/account is %d" , masterLog);
-  int logkey1[3] = {1,2,3};
-//   logkey1[0] = 1;
-   
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "the account is %d" , masterLog);
+  //data to be written
+  int logkey1[10] = {1,2,3,4,5,6,7,8,9,10};
+  
+  //writing the data
   persist_write_data(masterLog, (const void *)logkey1, sizeof(logkey1));
   
+  //reading the data
   int logsize = persist_get_size(masterLog);
-  int displaylog[logsize];
-  displaylog[logsize] = persist_read_data(masterLog, (void *)displaylog, sizeof(displaylog) );
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "logdata is %d", displaylog[logsize]);
+  
+  int arraySize = logsize/sizeof(int);
+  int displaylog[arraySize];
+  displaylog[arraySize] = persist_read_data(masterLog, (void *)displaylog, logsize );
+  
+  //logging the data
+  for ( int i = 0; i < arraySize; i++) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", displaylog[i]);
+  };
+  
 }
 
 
@@ -71,11 +80,52 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     
     app_message_outbox_send();
     
-    //getting the last-used logkey value from masterlog
+    //local storage, local log
+    
+    int newLog[3] = {ACTIVITY_KEY, time_begin_write, time_end_write};
+    
+    if(persist_exists(masterLog)){
+  //reading the data
   int logsize = persist_get_size(masterLog);
-  int displaylog[logsize];
-  displaylog[logsize] = persist_read_data(masterLog, (void *)displaylog, sizeof(displaylog) );
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "last logkey is %d", displaylog[logsize - 1]);
+  
+  int arraySize = logsize/sizeof(int);
+  int displaylog[arraySize];
+  displaylog[arraySize] = persist_read_data(masterLog, (void *)displaylog, logsize );
+  
+  //logging the data
+  for ( int i = 0; i < arraySize; i++) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", displaylog[i]);
+  };
+    
+    int newMasterLog[arraySize + 1];
+    
+    int i;
+    for ( i = 0 ; i <= arraySize; i++) {
+      newMasterLog[i] = displaylog[i];
+    };
+      
+    newMasterLog[arraySize] = displaylog[arraySize - 1] + 1; 
+      
+    for ( int i = 0; i < arraySize + 1; i++) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", newMasterLog[i]);
+  };
+
+    
+//     int newLogKey = displaylog[i] + 1;
+//     newMasterLog[arraySize + 1] = newLogKey;
+    
+//     APP_LOG(APP_LOG_LEVEL_DEBUG, "the newLogKey is %d", newLogKey);
+
+//     for ( int i = 0; i < (int)ARRAY_LENGTH(newMasterLog); i++) {
+//       APP_LOG(APP_LOG_LEVEL_DEBUG, "the keys in the newMasterLog are %d", newMasterLog[i]);
+//     };
+      
+//     persist_write_data(newLogKey, (const void *)newLog, sizeof(newLog));
+    persist_write_data(masterLog, (const void *)newMasterLog, sizeof(newMasterLog));
+    
+    
+
+    }
     
   }else { //pause_write = false, meaning the time has just been resumed.
     action_bar_layer_set_icon(s_action_bar_layer, BUTTON_ID_UP, s_pause_bitmap);

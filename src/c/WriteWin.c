@@ -34,26 +34,7 @@ static void timer_time_str(uint32_t timer_time, bool showHours, char* str, int s
 
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) { 
-
-
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "the account is %d" , masterLog);
-  //data to be written
-  int logkey1[10] = {1,2,3,4,5,6,7,8,9,10};
   
-  //writing the data
-  persist_write_data(masterLog, (const void *)logkey1, sizeof(logkey1));
-  
-  //reading the data
-  int logsize = persist_get_size(masterLog);
-  
-  int arraySize = logsize/sizeof(int);
-  int displaylog[arraySize];
-  displaylog[arraySize] = persist_read_data(masterLog, (void *)displaylog, logsize );
-  
-  //logging the data
-  for ( int i = 0; i < arraySize; i++) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", displaylog[i]);
-  };
   
 }
 
@@ -84,50 +65,54 @@ static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
     
     int newLog[3] = {ACTIVITY_KEY, time_begin_write, time_end_write};
     
-    if(persist_exists(masterLog)){
+  if(persist_exists(masterLog)){
   //reading the data
   int logsize = persist_get_size(masterLog);
   
   int arraySize = logsize/sizeof(int);
   int displaylog[arraySize];
   displaylog[arraySize] = persist_read_data(masterLog, (void *)displaylog, logsize );
-  
-  //logging the data
-  for ( int i = 0; i < arraySize; i++) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", displaylog[i]);
-  };
     
-    int newMasterLog[arraySize + 1];
+  //ceating a new masterLog
+  int newMasterLog[arraySize + 1];
     
-    int i;
-    for ( i = 0 ; i <= arraySize; i++) {
+  //incrementing to copy over the data
+  for ( int i = 0 ; i <= arraySize; i++) {
       newMasterLog[i] = displaylog[i];
-    };
+  };
       
-    newMasterLog[arraySize] = displaylog[arraySize - 1] + 1; 
+  //declearing a newlogkey, evaluated to be one bigger than the last key in the original log.
+  int newLogKey = newMasterLog[arraySize - 1] + 1;
+  newMasterLog[arraySize] = newLogKey;
       
-    for ( int i = 0; i < arraySize + 1; i++) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", newMasterLog[i]);
+  for ( int i = 0; i < arraySize + 1; i++) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "the logkeys are %d", newMasterLog[i]);
   };
 
-    
-//     int newLogKey = displaylog[i] + 1;
-//     newMasterLog[arraySize + 1] = newLogKey;
-    
-//     APP_LOG(APP_LOG_LEVEL_DEBUG, "the newLogKey is %d", newLogKey);
+  persist_write_data(newLogKey, (const void *)newLog, sizeof(newLog));
+  persist_write_data(masterLog, (const void *)newMasterLog, sizeof(newMasterLog));
+  
+int lastkey = newMasterLog[arraySize];
+int actLogSize = persist_get_size(lastkey);
+int actArraySize = actLogSize/sizeof(int);
+int actLog[actArraySize];
+actLog[actArraySize] = persist_read_data(lastkey, (void *)actLog, actLogSize);
 
-//     for ( int i = 0; i < (int)ARRAY_LENGTH(newMasterLog); i++) {
-//       APP_LOG(APP_LOG_LEVEL_DEBUG, "the keys in the newMasterLog are %d", newMasterLog[i]);
-//     };
-      
-//     persist_write_data(newLogKey, (const void *)newLog, sizeof(newLog));
-    persist_write_data(masterLog, (const void *)newMasterLog, sizeof(newMasterLog));
-    
-    
+for (int i = 0; i < actArraySize; i++){
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "the actLog is %d", actLog[i]);
+}
+  
+  }else{
+   APP_LOG(APP_LOG_LEVEL_DEBUG, "no data has been written to masterlog yet");
+  int newKey = 1;
+  int newStartLog[1] = {newKey};
+  persist_write_data(masterLog, (const void *)newStartLog, sizeof(newStartLog));
+  persist_write_data(newKey, (const void *)newLog, sizeof(newLog));
 
-    }
+  }
     
   }else { //pause_write = false, meaning the time has just been resumed.
+
     action_bar_layer_set_icon(s_action_bar_layer, BUTTON_ID_UP, s_pause_bitmap);
     time_begin_write = (uint32_t)time(NULL);
   }

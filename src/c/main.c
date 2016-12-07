@@ -4,7 +4,7 @@
 
 #define NUM_WINDOWS 4
 
-int masterLog = 321;
+int masterLog;
 
 static Window *s_main_window;
 static MenuLayer *s_menu_layer;
@@ -43,6 +43,7 @@ static void select_callback(struct MenuLayer *menu_layer, MenuIndex *cell_index,
       activities_window_push();
       break;
     case 1:
+      timeline_window_push();
       break;
     case 2:
       break;
@@ -66,6 +67,7 @@ static void window_load(Window *window) {
   }else {
       // if no masterlog exists then it means it is the user's first time using the app.
       // masterlog will be initalized as a global variable, but nothing will be written to it yet.
+    masterLog = 321;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "key not perserved, creating new masterlog. Account is %d", masterLog);
   
   }

@@ -13,3 +13,5 @@ void activities_window_push();
 void sleep_window_push();
 
 void write_window_push();
+
+void timeline_window_push();
